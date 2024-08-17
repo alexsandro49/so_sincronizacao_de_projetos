@@ -1,0 +1,1 @@
+# so_sincronizacao_de_projetos
