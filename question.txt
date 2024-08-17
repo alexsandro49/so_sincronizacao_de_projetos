@@ -1,0 +1,14 @@
+MISSÃO MARTE
+
+Em uma missão espacial autônoma para explorar um planeta distante, um módulo de exploração
+robótica é enviado com recursos limitados de energia e equipamentos (motores, braço mecânico
+etc.). O módulo é equipado com vários subsistemas (tarefas), incluindo coleta de amostras, análise
+científica, comunicação com a Terra, e navegação. Cada subsistema requer diferentes quantidades
+de recursos e deve operar de maneira coordenada para garantir que a missão seja bem-sucedida e
+que o módulo não fique sem recursos críticos.
+Recursos Limitados: O módulo tem uma quantidade limitada de energia, oxigênio e combustível,
+que deve ser compartilhada entre os subsistemas. Cada operação consome uma quantidade
+específica desses recursos.
+Objetivo: desenvolver um sistema de gerenciamento de recursos que sincronize e priorize as
+operações dos subsistemas, garantindo que a missão seja completada com sucesso e que o módulo
+não fique sem recursos críticos.
