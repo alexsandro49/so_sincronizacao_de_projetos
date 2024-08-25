@@ -54,7 +54,7 @@ class Spaceship:
                 f"  Combustível: {self._format_progress(self._fuel, self._fuel_capacity)} ({fuel_percentage:.1f}%)\n"
                 f"  Oxigênio: {self._format_progress(self._oxygen, self._oxygen_capacity)} ({oxygen_percentage:.1f}%)\n")
 
-    def perform_task(self, task_name, energy_needed, fuel_needed, oxygen_needed, duration):
+    def perform_task(self, task_id, task_name, energy_needed, fuel_needed, oxygen_needed, duration):
         with self.resource_lock:
             try:
                 # Verifica se há recursos suficientes
@@ -62,7 +62,7 @@ class Spaceship:
                 self.setFuel(fuel_needed)
                 self.setOxygen(oxygen_needed)
                 
-                print(f"\n➡️ [INÍCIO] {task_name}")
+                print(f"\n➡️ [INÍCIO] {task_id} - {task_name}")
                 print(f"  Consumindo recursos: Energia={energy_needed}, Combustível={fuel_needed}, Oxigênio={oxygen_needed}")
                 print(f"  Tempo estimado: {duration} segundos")
                 
@@ -72,13 +72,13 @@ class Spaceship:
                 # Simula a execução da tarefa
                 time.sleep(duration)
                 
-                print(f"✅ [CONCLUÍDO] {task_name}")
+                print(f"✅ [CONCLUÍDO] {task_id} - {task_name}")
             except ValueError as e:
-                print(f"❌ [FALHA] {task_name}: {e}")
+                print(f"❌ [FALHA] {task_id} - {task_name}: {e}")
 
 # Exemplo de Tarefas a serem executadas
-def task(spaceship, task_name, energy, fuel, oxygen, duration):
-    spaceship.perform_task(task_name, energy, fuel, oxygen, duration)
+def task(spaceship, task_id, task_name, energy, fuel, oxygen, duration):
+    spaceship.perform_task(task_id, task_name, energy, fuel, oxygen, duration)
 
 # Inicialização da nave com recursos limitados
 spaceship = Spaceship(100, 50, 75)
@@ -93,8 +93,8 @@ tasks = [
 
 # Criando threads para as tarefas
 threads = []
-for t in tasks:
-    thread = threading.Thread(target=task, args=(spaceship, *t))
+for task_id,(task_name, energy, fuel, oxygen, duration) in enumerate(tasks):
+    thread = threading.Thread(target=task, args=(spaceship, task_id, task_name, energy, fuel, oxygen, duration))
     threads.append(thread)
     thread.start()
 
