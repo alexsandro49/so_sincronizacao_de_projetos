@@ -5,6 +5,12 @@ from enum import Enum
 import threading
 import time
 import random
+from rich.console import Console
+from rich.text import Text
+from rich.progress import Progress, BarColumn, TextColumn
+from rich.panel import Panel
+
+console = Console()
 
 class StatusEnum(Enum):
     PENDING = "PENDING"
@@ -60,6 +66,7 @@ class Spaceship:
         if self.oxygen_capacity is None:
             self.oxygen_capacity = self.get_oxygen()
 
+
     def get_energy(self):
         return self.energy
 
@@ -83,10 +90,30 @@ class Spaceship:
         if amount > self.oxygen_capacity:
             raise ValueError("Oxigênio insuficiente para a operação")
         self.oxygen -= amount
+        
+    def get_resources_situation(self):
+        # Calcula as porcentagens para cada recurso
+        energy_percentage = (self.energy / self.energy_capacity) * 100
+        fuel_percentage = (self.fuel / self.fuel_capacity) * 100
+        oxygen_percentage = (self.oxygen / self.oxygen_capacity) * 100
 
+        energy_str = f"{self.energy:.2f}/{self.energy_capacity:.2f} ({energy_percentage:.1f}%)"
+        fuel_str = f"{self.fuel:.2f}/{self.fuel_capacity:.2f} ({fuel_percentage:.1f}%)"
+        oxygen_str = f"{self.oxygen:.2f}/{self.oxygen_capacity:.2f} ({oxygen_percentage:.1f}%)"
+
+        status_text = Text()
+        status_text.append(f"[Energia: {energy_str}]\n", style="bold green")
+        status_text.append(f"[Combustível: {fuel_str}]\n", style="bold yellow")
+        status_text.append(f"[Oxigênio: {oxygen_str}]", style="bold blue")
+
+        status_panel = Panel(status_text, title="Situação da Nave", border_style="cyan", expand=False, title_align="left")
+        
+        console.log(status_panel)
+        
     def create_task(self, task: Task):
         self.task_list.put(task)
-        self.task_event.set()  # Notifica que há uma nova tarefa
+        self.task_event.set() 
+        console.log(f"[yellow]Nova tarefa adicionada:[/] [ID:{task.id}] [Name:{task.name.value}] [Priority:{task.priority}]")
 
     def list_tasks(self):
         return list(self.task_list.queue)
@@ -105,26 +132,27 @@ class Spaceship:
                 if task.status == StatusEnum.PENDING:
                     self.verify_attend_requirements(task)
                     task.status = StatusEnum.IN_PROGRESS
-                    print(f"Task {task.name} started.")
-                    
+                    console.log(f"[blue]Tarefa iniciada: [ID:{task.id}] [Name:{task.name.value}]")
+
                     energy_per_unit = task.energy_required / task.duration
                     fuel_per_unit = task.fuel_required / task.duration
                     oxygen_per_unit = task.oxygen_required / task.duration
+
 
                     for t in range(task.duration):
                         self.consume_energy(energy_per_unit)
                         self.consume_fuel(fuel_per_unit)
                         self.consume_oxygen(oxygen_per_unit)
-                        
+                            
                         time.sleep(1)
-                        print(f"[{task.name}] Progress: {t + 1}/{task.duration}")
 
                     task.status = StatusEnum.COMPLETED                    
-                    print(f"Task {task.name} completed successfully!")
+                    console.log(f"[green]Tarefa concluída: [ID:{task.id}] [Name:{task.name.value}]")
+                    self.get_resources_situation()
                     
             except ValueError as e:
                 task.status = StatusEnum.FAILED
-                print(f"Task {task.name} failed: {e}")
+                console.log(f"[red]Tarefa falhou: [ID:{task.id}] [Name:{task.name.value}] - {e}")
 
     def process_tasks(self):
         while True:
@@ -134,7 +162,7 @@ class Spaceship:
             while not self.task_list.empty():
                 task = self.task_list.get()
                 if task.status == StatusEnum.PENDING:
-                    print(f"Processing task: {task.name} (Priority: {task.priority}, Status: {task.status.value})")
+                    console.log(f"[magenta]Tarefa selecionada para execução: [ID:{task.id}] [Name:{task.name.value}] [Energy:{task.energy_required}] [Fuel:{task.fuel_required}] [Oxygen:{task.oxygen_required}]")
                     self.perform_task(task)
                 else:
                     # Se a tarefa não está no status PENDING, coloque-a de volta na fila
@@ -154,9 +182,11 @@ class Spaceship:
                 duration=random.randint(1, 10)
             )
             self.create_task(task)
-            print(f"New task added: {task.name} (Priority: {task.priority})")
 
-# Exemplo de uso
+
+
+
+
 spaceship = Spaceship(200, 100, 80)
 
 tasks = [
