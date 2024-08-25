@@ -9,43 +9,10 @@ from rich.console import Console
 from rich.text import Text
 from rich.progress import Progress, BarColumn, TextColumn
 from rich.panel import Panel
+from enums import TaskType, StatusEnum
+from task import Task
 
 console = Console()
-
-class StatusEnum(Enum):
-    PENDING = "PENDING"
-    IN_PROGRESS = "IN_PROGRESS"
-    COMPLETED = "COMPLETED"
-    FAILED = "FAILED"
-
-class TaskType(Enum):
-    COMMUNICATION = "Comunicação com a Terra"
-    NAVIGATION = "Navegação"
-    SAMPLE_COLLECTION = "Coleta de Amostras"
-    SCIENTIFIC_ANALYSIS = "Análise Científica"
-    LIFE_RESEARCH = "Pesquisa de Vida"
-
-@dataclass(order=True)
-class Task:
-    sort_index: int = field(init=False, repr=False)
-    id: str = field(hash=True)
-    name: TaskType
-    priority: int
-    energy_required: int
-    fuel_required: int
-    oxygen_required: int
-    duration: int
-    status: StatusEnum = field(init=False, default=StatusEnum.PENDING)
-
-    def __post_init__(self):
-        status_order = {
-            StatusEnum.PENDING: 0,
-            StatusEnum.IN_PROGRESS: 1,
-            StatusEnum.COMPLETED: 2,
-            StatusEnum.FAILED: 3
-        }
-        self.sort_index = (status_order[self.status], -self.priority)
-
 @dataclass
 class Spaceship:
     energy: int
@@ -92,7 +59,6 @@ class Spaceship:
         self.oxygen -= amount
         
     def get_resources_situation(self):
-        # Calcula as porcentagens para cada recurso
         energy_percentage = (self.energy / self.energy_capacity) * 100
         fuel_percentage = (self.fuel / self.fuel_capacity) * 100
         oxygen_percentage = (self.oxygen / self.oxygen_capacity) * 100
@@ -156,8 +122,8 @@ class Spaceship:
 
     def process_tasks(self):
         while True:
-            self.task_event.wait()  # Espera até que haja uma tarefa para processar
-            self.task_event.clear()  # Limpa o evento
+            self.task_event.wait() 
+            self.task_event.clear() 
 
             while not self.task_list.empty():
                 task = self.task_list.get()
@@ -165,13 +131,12 @@ class Spaceship:
                     console.log(f"[magenta]Tarefa selecionada para execução: [ID:{task.id}] [Name:{task.name.value}] [Energy:{task.energy_required}] [Fuel:{task.fuel_required}] [Oxygen:{task.oxygen_required}]")
                     self.perform_task(task)
                 else:
-                    # Se a tarefa não está no status PENDING, coloque-a de volta na fila
                     self.task_list.put(task)
 
     def add_random_tasks(self):
         task_types = list(TaskType)
         while True:
-            time.sleep(random.randint(5, 10))  # Adiciona uma nova tarefa a cada 5 a 10 segundos
+            time.sleep(random.randint(5, 10))  
             task = Task(
                 id=str(random.randint(1000, 9999)),
                 name=random.choice(task_types),
@@ -187,23 +152,3 @@ class Spaceship:
 
 
 
-spaceship = Spaceship(200, 100, 80)
-
-tasks = [
-    Task(id="1", name=TaskType.COMMUNICATION, priority=3, energy_required=10, fuel_required=20, oxygen_required=30, duration=6),
-    Task(id="2", name=TaskType.LIFE_RESEARCH, priority=5, energy_required=15, fuel_required=10, oxygen_required=5, duration=3),
-    Task(id="3", name=TaskType.SAMPLE_COLLECTION, priority=4, energy_required=20, fuel_required=30, oxygen_required=40, duration=9),
-    Task(id="4", name=TaskType.COMMUNICATION, priority=2, energy_required=50, fuel_required=20, oxygen_required=40, duration=4),
-    Task(id="5", name=TaskType.SAMPLE_COLLECTION, priority=4, energy_required=20, fuel_required=30, oxygen_required=40, duration=6)
-]
-
-for task in tasks:
-    spaceship.create_task(task)
-
-# Iniciar o processamento das tarefas em uma thread separada
-task_processor_thread = threading.Thread(target=spaceship.process_tasks)
-task_processor_thread.start()
-
-# Iniciar a adição de novas tarefas em uma thread separada
-task_adder_thread = threading.Thread(target=spaceship.add_random_tasks)
-task_adder_thread.start()
