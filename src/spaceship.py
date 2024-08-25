@@ -4,6 +4,7 @@ from queue import PriorityQueue
 from enum import Enum
 import threading
 import time
+import random
 
 class StatusEnum(Enum):
     PENDING = "PENDING"
@@ -139,6 +140,22 @@ class Spaceship:
                     # Se a tarefa não está no status PENDING, coloque-a de volta na fila
                     self.task_list.put(task)
 
+    def add_random_tasks(self):
+        task_types = list(TaskType)
+        while True:
+            time.sleep(random.randint(5, 10))  # Adiciona uma nova tarefa a cada 5 a 10 segundos
+            task = Task(
+                id=str(random.randint(1000, 9999)),
+                name=random.choice(task_types),
+                priority=random.randint(1, 10),
+                energy_required=random.randint(5, 30),
+                fuel_required=random.randint(5, 30),
+                oxygen_required=random.randint(5, 30),
+                duration=random.randint(1, 10)
+            )
+            self.create_task(task)
+            print(f"New task added: {task.name} (Priority: {task.priority})")
+
 # Exemplo de uso
 spaceship = Spaceship(200, 100, 80)
 
@@ -147,9 +164,7 @@ tasks = [
     Task(id="2", name=TaskType.LIFE_RESEARCH, priority=5, energy_required=15, fuel_required=10, oxygen_required=5, duration=3),
     Task(id="3", name=TaskType.SAMPLE_COLLECTION, priority=4, energy_required=20, fuel_required=30, oxygen_required=40, duration=9),
     Task(id="4", name=TaskType.COMMUNICATION, priority=2, energy_required=50, fuel_required=20, oxygen_required=40, duration=4),
-    Task(id="5", name=TaskType.SAMPLE_COLLECTION, priority=4, energy_required=20, fuel_required=30, oxygen_required=40, duration=6),
-    Task(id="6", name=TaskType.SAMPLE_COLLECTION, priority=4, energy_required=20, fuel_required=30, oxygen_required=5, duration=9),
-    Task(id="7", name=TaskType.LIFE_RESEARCH, priority=5, energy_required=15, fuel_required=10, oxygen_required=5, duration=3),
+    Task(id="5", name=TaskType.SAMPLE_COLLECTION, priority=4, energy_required=20, fuel_required=30, oxygen_required=40, duration=6)
 ]
 
 for task in tasks:
@@ -158,3 +173,7 @@ for task in tasks:
 # Iniciar o processamento das tarefas em uma thread separada
 task_processor_thread = threading.Thread(target=spaceship.process_tasks)
 task_processor_thread.start()
+
+# Iniciar a adição de novas tarefas em uma thread separada
+task_adder_thread = threading.Thread(target=spaceship.add_random_tasks)
+task_adder_thread.start()
